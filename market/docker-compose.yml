@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: simple-market-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: simpleMarket1234
+      MYSQL_DATABASE: simple_market-bd
+      MYSQL_USER: simple-market-bd-user
+      MYSQL_PASSWORD: simpleMarket1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - simple-market-data:/var/lib/mysql
+
+volumes:
+  simple-market-data:

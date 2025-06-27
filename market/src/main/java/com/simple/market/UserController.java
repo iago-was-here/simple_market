@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,6 +23,7 @@ public class UserController {
     private static final String SUCCESS_MESSAGE = "Usuário criado com sucesso!";
     private static final String DELETE_MESSAGE = "Usuário deletado com sucesso!";
     private static final String UPDATE_MESSAGE = "Usuário atualizado com sucesso!";
+    static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public UserController(UserRepository userRepository, UserTypeRepository userTypeRepository) {
         this.userRepository = userRepository;
@@ -74,19 +76,8 @@ public class UserController {
 
     private void setDefaultPasswordIfEmpty(User user) {
         if (user.getSenha_hash() == null || user.getSenha_hash().isEmpty()) {
-            try {
-                byte[] hashBytes = MessageDigest.getInstance("SHA-256")
-                        .digest(DEFAULT_PASSWORD.getBytes());
-
-                String hashHex = IntStream.range(0, hashBytes.length)
-                        .mapToObj(i -> String.format("%02x", hashBytes[i]))
-                        .collect(Collectors.joining());
-
-                user.setSenha_hash(hashHex);
-            } catch (java.security.NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                user.setSenha_hash(DEFAULT_PASSWORD);
-            }
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            user.setSenha_hash(encoder.encode(DEFAULT_PASSWORD));
         }
     }
 

@@ -2,7 +2,7 @@ USE `simple_market-bd`;
 
 CREATE TABLE tipo_usuario(
 	id INT PRIMARY KEY AUTO_INCREMENT,
-    description VARCHAR(100)
+    descricao VARCHAR(100)
 );
 
 CREATE TABLE usuario(
@@ -18,4 +18,4 @@ CREATE TABLE usuario(
         REFERENCES `tipo_usuario` (`id`)
 );
 
-INSERT INTO tipo_usuario(description) values('caixa'), ('gerente');
+INSERT INTO tipo_usuario(descricao) values('caixa'), ('gerente');

@@ -3,6 +3,7 @@ package com.simple.market;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +31,7 @@ public class UserController {
     }
 
     @PostMapping("/users/create")
-    public String createUser(@ModelAttribute User user) {
+    public String createUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
         user.setData_cadastro(LocalDateTime.now());
 
         if (user.getSenha_hash() == null || user.getSenha_hash().isEmpty()) {
@@ -44,30 +45,37 @@ public class UserController {
 
                 user.setSenha_hash(hashHex);
             } catch (java.security.NoSuchAlgorithmException e) {
-                // Fallback ou log de erro
                 e.printStackTrace();
-                user.setSenha_hash("temp123"); // fallback inseguro, só para não quebrar
+                user.setSenha_hash("temp123"); // fallback inseguro
             }
         }
 
         if (user.getTipo_usuario() == null) {
-            // exemplo fixo para tipo_usuario id=1 (ajuste conforme seu banco)
             Optional<UserType> tipo = userTypeRepository.findById(1L);
             tipo.ifPresent(user::setTipo_usuario);
         }
 
         userRepository.save(user);
+
+        // Adiciona mensagem
+        redirectAttributes.addFlashAttribute("message", "Usuário criado com sucesso!");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+
         return "redirect:/users";
     }
 
     @GetMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id) {
+    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         userRepository.deleteById(id);
+
+        redirectAttributes.addFlashAttribute("message", "Usuário deletado com sucesso!");
+        redirectAttributes.addFlashAttribute("messageType", "danger");
+
         return "redirect:/users";
     }
 
     @PostMapping("/users/edit/{id}")
-    public String updateUser(@PathVariable Long id, @ModelAttribute User user) {
+    public String updateUser(@PathVariable Long id, @ModelAttribute User user,  RedirectAttributes redirectAttributes) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
@@ -85,6 +93,9 @@ public class UserController {
             }
 
             userRepository.save(existingUser);
+
+            redirectAttributes.addFlashAttribute("message", "Usuário atualizado com sucesso!");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
         }
         return "redirect:/users";
     }

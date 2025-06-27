@@ -10,6 +10,11 @@
 </head>
 <body>
 <div class="container mt-4">
+    <div th:if="${message}" th:class="'alert alert-dismissible fade show ' + ('alert-' + (${messageType} ?: 'info'))"
+         role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
     <div class="card">
         <div class="card-header">
             <h3>Welcome to Simple Market</h3>
@@ -52,9 +57,7 @@
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a class="dropdown-item text-primary edit-user"
-                                           href="#" th:href="@{/users/edit/{id}(id=${user.id})}"
-                                           th:data-id="${user.id}">
+                                        <a class="dropdown-item text-primary edit-user" href="javascript:void(0);" th:data-id="${user.id}">
                                             <i class="bi bi-pencil-square me-2"></i> Editar
                                         </a>
                                     </li>
@@ -90,6 +93,7 @@
                         <div class="mb-3">
                             <label for="userType" class="form-label">Tipo Usuário</label>
                             <select class="form-select" id="userType" name="tipo_usuario" required>
+                                <option value="">--Selecione--</option>
                                 <option value="1">Caixa</option>
                                 <option value="2">Gerente</option>
                             </select>

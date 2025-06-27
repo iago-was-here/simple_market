@@ -33,9 +33,9 @@
             <tr th:each="user : ${users}">
                 <td th:text="${user.nome}">Nome</td>
                 <td th:text="${user.login}">Login</td>
-                <td th:text="${user.tipo_usuario.descricao}">Tipo</td>
+                <td th:text="${#strings.capitalize(user.tipo_usuario.descricao)}">Tipo</td>
                 <td th:text="${user.ativo == 1 ? 'Ativo' : 'Inativo'}">Ativo</td>
-                <td th:text="${user.data_cadastro}">Data</td>
+                <td th:text="${#temporals.format(user.data_cadastro, 'dd/MM/yyyy HH:mm')}">Data</td>
                 <td>
                     <div class="dropdown">
                         <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">

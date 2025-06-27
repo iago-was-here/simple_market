@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.security.MessageDigest;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Controller
 public class UserController {
@@ -28,10 +31,23 @@ public class UserController {
 
     @PostMapping("/users/create")
     public String createUser(@ModelAttribute User user) {
-        user.setData_cadastro(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        user.setData_cadastro(LocalDateTime.now());
 
         if (user.getSenha_hash() == null || user.getSenha_hash().isEmpty()) {
-            user.setSenha_hash("temp123");
+            try {
+                byte[] hashBytes = java.security.MessageDigest.getInstance("SHA-256")
+                        .digest("temp123".getBytes());
+
+                String hashHex = java.util.stream.IntStream.range(0, hashBytes.length)
+                        .mapToObj(i -> String.format("%02x", hashBytes[i]))
+                        .collect(java.util.stream.Collectors.joining());
+
+                user.setSenha_hash(hashHex);
+            } catch (java.security.NoSuchAlgorithmException e) {
+                // Fallback ou log de erro
+                e.printStackTrace();
+                user.setSenha_hash("temp123"); // fallback inseguro, só para não quebrar
+            }
         }
 
         if (user.getTipo_usuario() == null) {

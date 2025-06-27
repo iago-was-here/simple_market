@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "usuario")
 public class User {
@@ -23,7 +25,7 @@ public class User {
     private UserType tipo_usuario;
 
     private int ativo;
-    private String data_cadastro;
+    private LocalDateTime data_cadastro;
 
     public User() {
 
@@ -85,11 +87,11 @@ public class User {
         this.ativo = ativo;
     }
 
-    public String getData_cadastro() {
+    public LocalDateTime getData_cadastro() {
         return data_cadastro;
     }
 
-    public void setData_cadastro(String data_cadastro) {
+    public void setData_cadastro(LocalDateTime data_cadastro) {
         this.data_cadastro = data_cadastro;
     }
 }

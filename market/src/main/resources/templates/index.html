@@ -33,7 +33,7 @@
             <tr th:each="user : ${users}">
                 <td th:text="${user.nome}">Nome</td>
                 <td th:text="${user.login}">Login</td>
-                <td th:text="${user.tipo_usuario.descricao}">Tipo</td>
+                <td th:text="${user.tipo_usuario?.descricao }">Tipo</td>
                 <td th:text="${user.ativo == 1 ? 'Ativo' : 'Inativo'}">Ativo</td>
                 <td th:text="${user.data_cadastro}">Data</td>
                 <td>

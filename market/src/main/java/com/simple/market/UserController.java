@@ -13,97 +13,105 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Controller
+@RequestMapping("/users")
 public class UserController {
 
     private final UserRepository userRepository;
-    private final UserTypeRepository userTypeRepository; // Você deve criar esse repository
+    private final UserTypeRepository userTypeRepository;
+    private static final String DEFAULT_PASSWORD = "temp123";
+    private static final String SUCCESS_MESSAGE = "Usuário criado com sucesso!";
+    private static final String DELETE_MESSAGE = "Usuário deletado com sucesso!";
+    private static final String UPDATE_MESSAGE = "Usuário atualizado com sucesso!";
 
     public UserController(UserRepository userRepository, UserTypeRepository userTypeRepository) {
         this.userRepository = userRepository;
         this.userTypeRepository = userTypeRepository;
     }
 
-    @GetMapping("/users")
+    @GetMapping
     public String index(Model model) {
         model.addAttribute("users", userRepository.findAll());
-        model.addAttribute("user", new User()); // necessário para o form de criação
+        model.addAttribute("user", new User());
         return "index";
     }
 
-    @PostMapping("/users/create")
+    @PostMapping("/create")
     public String createUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
         user.setData_cadastro(LocalDateTime.now());
-
-        if (user.getSenha_hash() == null || user.getSenha_hash().isEmpty()) {
-            try {
-                byte[] hashBytes = java.security.MessageDigest.getInstance("SHA-256")
-                        .digest("temp123".getBytes());
-
-                String hashHex = java.util.stream.IntStream.range(0, hashBytes.length)
-                        .mapToObj(i -> String.format("%02x", hashBytes[i]))
-                        .collect(java.util.stream.Collectors.joining());
-
-                user.setSenha_hash(hashHex);
-            } catch (java.security.NoSuchAlgorithmException e) {
-                e.printStackTrace();
-                user.setSenha_hash("temp123"); // fallback inseguro
-            }
-        }
-
-        if (user.getTipo_usuario() == null) {
-            Optional<UserType> tipo = userTypeRepository.findById(1L);
-            tipo.ifPresent(user::setTipo_usuario);
-        }
+        setDefaultPasswordIfEmpty(user);
+        setDefaultUserTypeIfEmpty(user);
 
         userRepository.save(user);
 
-        // Adiciona mensagem
-        redirectAttributes.addFlashAttribute("message", "Usuário criado com sucesso!");
-        redirectAttributes.addFlashAttribute("messageType", "success");
-
+        addFlashMessage(redirectAttributes, SUCCESS_MESSAGE, "success");
         return "redirect:/users";
     }
 
-    @GetMapping("/users/delete/{id}")
+    @GetMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         userRepository.deleteById(id);
-
-        redirectAttributes.addFlashAttribute("message", "Usuário deletado com sucesso!");
-        redirectAttributes.addFlashAttribute("messageType", "danger");
-
+        addFlashMessage(redirectAttributes, DELETE_MESSAGE, "danger");
         return "redirect:/users";
     }
 
-    @PostMapping("/users/edit/{id}")
-    public String updateUser(@PathVariable Long id, @ModelAttribute User user,  RedirectAttributes redirectAttributes) {
+    @PostMapping("/edit/{id}")
+    public String updateUser(@PathVariable Long id, @ModelAttribute User user, RedirectAttributes redirectAttributes) {
         Optional<User> optionalUser = userRepository.findById(id);
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
-            existingUser.setNome(user.getNome());
-            existingUser.setLogin(user.getLogin());
-            existingUser.setAtivo(user.getAtivo());
-
-            // opcional: atualizar senha e tipo_usuario se quiser
-            if (user.getSenha_hash() != null && !user.getSenha_hash().isEmpty()) {
-                existingUser.setSenha_hash(user.getSenha_hash());
-            }
-
-            if (user.getTipo_usuario() != null) {
-                existingUser.setTipo_usuario(user.getTipo_usuario());
-            }
-
+            updateUserFields(existingUser, user);
             userRepository.save(existingUser);
-
-            redirectAttributes.addFlashAttribute("message", "Usuário atualizado com sucesso!");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
+            addFlashMessage(redirectAttributes, UPDATE_MESSAGE, "warning");
         }
         return "redirect:/users";
     }
 
-    @GetMapping("/users/fetch/{id}")
+    @GetMapping("/fetch/{id}")
     @ResponseBody
     public User fetchUser(@PathVariable Long id) {
         return userRepository.findById(id).orElse(null);
     }
 
+    private void setDefaultPasswordIfEmpty(User user) {
+        if (user.getSenha_hash() == null || user.getSenha_hash().isEmpty()) {
+            try {
+                byte[] hashBytes = MessageDigest.getInstance("SHA-256")
+                        .digest(DEFAULT_PASSWORD.getBytes());
+
+                String hashHex = IntStream.range(0, hashBytes.length)
+                        .mapToObj(i -> String.format("%02x", hashBytes[i]))
+                        .collect(Collectors.joining());
+
+                user.setSenha_hash(hashHex);
+            } catch (java.security.NoSuchAlgorithmException e) {
+                e.printStackTrace();
+                user.setSenha_hash(DEFAULT_PASSWORD);
+            }
+        }
+    }
+
+    private void setDefaultUserTypeIfEmpty(User user) {
+        if (user.getTipo_usuario() == null) {
+            userTypeRepository.findById(1L).ifPresent(user::setTipo_usuario);
+        }
+    }
+
+    private void updateUserFields(User existingUser, User newUser) {
+        existingUser.setNome(newUser.getNome());
+        existingUser.setLogin(newUser.getLogin());
+        existingUser.setAtivo(newUser.getAtivo());
+
+        if (newUser.getSenha_hash() != null && !newUser.getSenha_hash().isEmpty()) {
+            existingUser.setSenha_hash(newUser.getSenha_hash());
+        }
+
+        if (newUser.getTipo_usuario() != null) {
+            existingUser.setTipo_usuario(newUser.getTipo_usuario());
+        }
+    }
+
+    private void addFlashMessage(RedirectAttributes redirectAttributes, String message, String type) {
+        redirectAttributes.addFlashAttribute("message", message);
+        redirectAttributes.addFlashAttribute("messageType", type);
+    }
 }
